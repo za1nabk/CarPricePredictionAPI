@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Car Price Prediction</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        canvas { max-width: 700px; margin: auto; }
+        textarea { width: 80%; height: 150px; }
+        button { margin-top: 10px; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h2>Car Price Prediction</h2>
+    
+    <textarea id="jsonInput">{
+        "car_age": 5,
+        "mileage": 5000,
+        "brand_toyota": 1,
+        "brand_ford": 0,
+        "brand_honda": 0,
+        "brand_chevrolet": 1,
+        "title_status_clean": 1,
+        "title_status_salvage": 0,
+        "state_texas": 0,
+        "state_california": 0,
+        "state_florida": 1,
+        "state_new_york": 0,
+        "fuel_gasoline": 1,
+        "fuel_diesel": 0,
+        "fuel_electric": 0,
+        "transmission_automatic": 1,
+        "transmission_manual": 0
+    }</textarea>
+
+    <br>
+    <button onclick="sendData()">Predict Price</button>
+    
+    <h3 id="result">Estimated Price: -</h3>
+
+    <canvas id="carChart"></canvas>
+
+    <script>
+        let chart;
+
+        console.log(" JavaScript is running!"); // Debugging
+
+        function sendData() {
+            const jsonData = document.getElementById("jsonInput").value;
+            
+            fetch("http://127.0.0.1:5000/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: jsonData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerText = "Estimated Price: " + data.estimated_price;
+                updateChart(data.input_data);
+            })
+            .catch(error => console.error("Fetch Error:", error));
+        }
+
+        function updateChart(jsonData) {
+            const labels = Object.keys(jsonData);
+            const values = Object.values(jsonData);
+
+            if (chart) { chart.destroy(); }
+
+            const ctx = document.getElementById("carChart").getContext("2d");
+            chart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Car Attributes (1 = Active, 0 = Inactive)",
+                        data: values,
+                        backgroundColor: values.map(v => v === 1 ? "rgba(75, 192, 192, 0.6)" : "rgba(192, 75, 75, 0.6)"),
+                        borderColor: "rgba(0,0,0,0.2)",
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        }
+    </script>
+
+</body>
+</html>
